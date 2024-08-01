@@ -45,6 +45,7 @@ async def start_telegram_application() -> None:
     application.add_handler(CommandHandler('start', start_telegram_command))
     
     try:
+        await application.initialize()
         await application.run_polling()
     except Exception as e:
         print(f"An error occurred with Telegram bot: {e}")
