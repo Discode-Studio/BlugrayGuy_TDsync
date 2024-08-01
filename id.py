@@ -12,10 +12,16 @@ async def main() -> None:
         raise ValueError("TELEGRAM_TOKEN must be set.")
     application = Application.builder().token(token).build()
     application.add_handler(CommandHandler('start', start))
-    await application.run_polling()
 
-if __name__ == '__main__':
     try:
-        asyncio.run(main())
+        await application.run_polling()
     except Exception as e:
         print(f"An error occurred: {e}")
+    finally:
+        try:
+            await application.shutdown()
+        except Exception as e:
+            print(f"An error occurred during shutdown: {e}")
+
+if __name__ == '__main__':
+    asyncio.run(main())
