@@ -43,6 +43,7 @@ async def start_telegram_application() -> None:
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
     application.add_handler(CommandHandler('start', start_telegram_command))
+    
     try:
         await application.run_polling()
     except Exception as e:
@@ -63,13 +64,18 @@ async def main() -> None:
     # Démarrage de l'application Telegram
     telegram_task = asyncio.create_task(start_telegram_application())
     
-    # Attente de la fin des tâches
-    await asyncio.gather(discord_task, telegram_task)
-
-if __name__ == '__main__':
     try:
-        asyncio.run(main())
+        # Attente de la fin des tâches
+        await asyncio.gather(discord_task, telegram_task)
     except KeyboardInterrupt:
         print("Program interrupted")
     except Exception as e:
         print(f"An error occurred: {e}")
+    finally:
+        # Assurez-vous de fermer les tâches correctement
+        discord_task.cancel()
+        telegram_task.cancel()
+        await asyncio.gather(discord_task, telegram_task, return_exceptions=True)
+
+if __name__ == '__main__':
+    asyncio.run(main())
