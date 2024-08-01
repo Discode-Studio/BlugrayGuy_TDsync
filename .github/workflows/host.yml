@@ -25,11 +25,16 @@ jobs:
         python -m venv venv
         source venv/bin/activate
 
-    - name: Install dependencies
+    - name: Upgrade pip
       run: |
         source venv/bin/activate
         python -m pip install --upgrade pip
+
+    - name: Install dependencies
+      run: |
+        source venv/bin/activate
         pip install -r requirements.txt
+        pip install discord.py python-telegram-bot
 
     - name: Check installed packages
       run: |
@@ -50,7 +55,7 @@ jobs:
       if: always()
       run: |
         LOG_CONTENT=$(cat bot_logs.txt)
-        LOG_CONTENT_CUT=$(echo "$LOG_CONTENT" | tail -n 20) # To keep the logs concise
+        LOG_CONTENT_CUT=$(echo "$LOG_CONTENT" | tail -n 20)
         curl -H "Content-Type: application/json" \
              -X POST \
              -d "{\"embeds\": [{\"title\": \"Bot logs\", \"description\": \"\`\`\`$LOG_CONTENT_CUT\`\`\`\", \"color\": 16753920}]}" \
