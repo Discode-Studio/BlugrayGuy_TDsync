@@ -70,10 +70,10 @@ async def main() -> None:
     except KeyboardInterrupt:
         print("Program interrupted")
     finally:
-        # Assurez-vous de fermer les tâches correctement
+        # Annulation des tâches pour un arrêt propre
         discord_task.cancel()
         telegram_task.cancel()
-        # Assurez-vous d'attendre la fin des tâches de fermeture
+        # Attente de la fin des tâches de fermeture
         await asyncio.gather(discord_task, telegram_task, return_exceptions=True)
 
 if __name__ == '__main__':
