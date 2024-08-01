@@ -45,7 +45,7 @@ async def on_message(message):
         await bot_telegram.send_message(chat_id=chat_id, text=text)
     await bot_discord.process_commands(message)
 
-# Démarrage des bots
+# Fonction principale
 async def main():
     # Démarrage du bot Telegram
     telegram_task = asyncio.create_task(start_telegram_application())
@@ -57,9 +57,9 @@ if __name__ == '__main__':
     # Obtenir la boucle d'événements existante ou en créer une nouvelle
     loop = asyncio.get_event_loop()
     if loop.is_running():
-        # Si une boucle est déjà en cours, on l'utilise
+        # Si une boucle est déjà en cours, créer une tâche
         loop.create_task(main())
         loop.run_forever()
     else:
-        # Si aucune boucle n'est en cours, on exécute le main normalement
+        # Si aucune boucle n'est en cours, exécuter le main normalement
         asyncio.run(main())
