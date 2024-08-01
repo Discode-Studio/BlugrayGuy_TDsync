@@ -12,30 +12,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Notify Discord - Workflow run started
-      run: |
-        curl -H "Content-Type: application/json" \
-             -X POST \
-             -d "{\"embeds\": [{\"title\": \"Workflow run started\", \"description\": \"Workflow started for $GITHUB_REPOSITORY on $GITHUB_REF by $GITHUB_ACTOR\", \"color\": 3447003}]}" \
-             ${{ secrets.DISCORD_WEBHOOK_URL }}
-
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Verify Python version and paths
+    - name: Clean up old installations
       run: |
-        which python
-        python --version
-        python -m pip --version
+        python -m pip uninstall -y discord.py python-telegram-bot
+        python -m pip cache purge
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: List installed packages
+    - name: Check installed packages
       run: |
         python -m pip list
+
+    - name: Verify Python paths
+      run: |
+        python -m site
 
     - name: Run main.py
       run: |
