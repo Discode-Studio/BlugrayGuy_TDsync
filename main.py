@@ -18,22 +18,16 @@ intents.messages = True
 bot_discord = commands.Bot(command_prefix='!', intents=intents)
 
 # Configuration du bot Telegram
-async def start_telegram_application(application: Application) -> None:
-    async def handle_telegram_message(update: Update) -> None:
-        if update.message.chat_id == TELEGRAM_CHANNEL_ID:
-            channel = bot_discord.get_channel(DISCORD_CHANNEL_ID)
-            text = f"**{update.message.from_user.username}:** {update.message.text}"
-            await channel.send(text)
+async def handle_telegram_message(update: Update) -> None:
+    if update.message.chat_id == TELEGRAM_CHANNEL_ID:
+        channel = bot_discord.get_channel(DISCORD_CHANNEL_ID)
+        text = f"**{update.message.from_user.username}:** {update.message.text}"
+        await channel.send(text)
 
-    async def start_telegram_command(update: Update, context: CallbackContext) -> None:
-        await update.message.reply_text('Hello!')
-
-    async def send_id_list(update: Update, context: CallbackContext) -> None:
-        response = f'The bot is present in chat ID: {update.message.chat_id}'
-        await update.message.reply_text(response)
-
-    application.add_handler(CommandHandler('start', start_telegram_command))
-    application.add_handler(CommandHandler('id', send_id_list))
+async def start_telegram_application() -> None:
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    application.add_handler(CommandHandler('start', lambda update, context: update.message.reply_text('Hello!')))
+    application.add_handler(CommandHandler('id', lambda update, context: update.message.reply_text(f'The bot is present in chat ID: {update.message.chat_id}')))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
     await application.run_polling()
 
@@ -42,13 +36,12 @@ async def start_telegram_application(application: Application) -> None:
 async def on_message(message):
     if message.channel.id == DISCORD_CHANNEL_ID and not message.author.bot:
         text = f"**{message.author.name}:** {message.content}"
-        await bot_telegram.bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=text)
+        await bot_telegram.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=text)
     await bot_discord.process_commands(message)
 
 async def main() -> None:
     # Démarrage du bot Telegram
-    telegram_application = Application.builder().token(TELEGRAM_TOKEN).build()
-    telegram_task = asyncio.create_task(start_telegram_application(telegram_application))
+    telegram_task = asyncio.create_task(start_telegram_application())
 
     # Démarrage du bot Discord
     discord_task = asyncio.create_task(bot_discord.start(DISCORD_TOKEN))
