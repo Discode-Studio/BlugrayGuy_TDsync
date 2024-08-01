@@ -1,78 +1,31 @@
-name: Deploy Discord and Telegram Bot
+name: Python application
 
 on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '59 */5 * * *'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
-    - name: Create virtual environment
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-
-    - name: Upgrade pip
-      run: |
-        source venv/bin/activate
-        python -m pip install --upgrade pip
-
     - name: Install dependencies
       run: |
-        source venv/bin/activate
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install discord.py python-telegram-bot --upgrade
 
-    - name: Check installed packages
+    - name: Run the bot
+      env:
+        DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       run: |
-        source venv/bin/activate
-        python -m pip list
-
-    - name: Run main.py
-      run: |
-        source venv/bin/activate
-        python main.py | tee bot_logs.txt
-
-    - name: Run id.py
-      run: |
-        source venv/bin/activate
-        python id.py | tee bot_logs.txt
-
-    - name: Notify Discord - Send bot logs
-      if: always()
-      run: |
-        LOG_CONTENT=$(cat bot_logs.txt)
-        LOG_CONTENT_CUT=$(echo "$LOG_CONTENT" | tail -n 20)
-        curl -H "Content-Type: application/json" \
-             -X POST \
-             -d "{\"embeds\": [{\"title\": \"Bot logs\", \"description\": \"\`\`\`$LOG_CONTENT_CUT\`\`\`\", \"color\": 16753920}]}" \
-             ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-    - name: Notify Discord - Workflow completed
-      if: always()
-      run: |
-        curl -H "Content-Type: application/json" \
-             -X POST \
-             -d "{\"embeds\": [{\"title\": \"Workflow completed\", \"description\": \"Workflow completed for $GITHUB_REPOSITORY on $GITHUB_REF\", \"color\": 3066993}]}" \
-             ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-    - name: Notify Discord - Failure
-      if: failure()
-      run: |
-        curl -H "Content-Type: application/json" \
-             -X POST \
-             -d "{\"embeds\": [{\"title\": \"Workflow failed\", \"description\": \"Workflow failed for $GITHUB_REPOSITORY on $GITHUB_REF\", \"color\": 15158332}]}" \
-             ${{ secrets.DISCORD_WEBHOOK_URL }}
+        python main.py | python id.py
