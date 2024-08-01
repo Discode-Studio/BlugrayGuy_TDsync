@@ -1,6 +1,5 @@
 import os
-import asyncio
-import discord
+import threading
 from discord.ext import commands
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters
@@ -54,23 +53,20 @@ async def start_telegram_application() -> None:
     bot_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
     await bot_telegram.run_polling()
 
-async def main() -> None:
-    # Démarrage du bot Discord
-    discord_task = asyncio.create_task(bot_discord.start(DISCORD_TOKEN))
-    
-    # Démarrage de l'application Telegram
-    telegram_task = asyncio.create_task(start_telegram_application())
-    
-    try:
-        # Attente de la fin des tâches
-        await asyncio.gather(discord_task, telegram_task)
-    except KeyboardInterrupt:
-        print("Program interrupted")
-    finally:
-        # Annulation des tâches pour un arrêt propre
-        discord_task.cancel()
-        telegram_task.cancel()
-        await asyncio.gather(discord_task, telegram_task, return_exceptions=True)
+def run_discord_bot():
+    bot_discord.run(DISCORD_TOKEN)
+
+def run_telegram_bot():
+    import asyncio
+    asyncio.run(start_telegram_application())
 
 if __name__ == '__main__':
-    asyncio.get_event_loop().run_until_complete(main())
+    # Lancer les bots dans des threads séparés pour éviter les conflits de boucle d'événements
+    discord_thread = threading.Thread(target=run_discord_bot)
+    telegram_thread = threading.Thread(target=run_telegram_bot)
+    
+    discord_thread.start()
+    telegram_thread.start()
+    
+    discord_thread.join()
+    telegram_thread.join()
