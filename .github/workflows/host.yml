@@ -85,7 +85,7 @@ jobs:
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       run: |
-        python main.py | python id.py
+        python main.py | python id.py | tee bot_logs.txt
 
     - name: Notify Discord - Send bot logs
       if: always()
