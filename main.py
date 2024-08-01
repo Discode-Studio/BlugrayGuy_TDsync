@@ -17,6 +17,9 @@ intents = discord.Intents.default()
 intents.messages = True
 bot_discord = commands.Bot(command_prefix='!', intents=intents)
 
+# Configuration du bot Telegram
+bot_telegram = Application.builder().token(TELEGRAM_TOKEN).build()
+
 # Channels IDs
 DISCORD_CHANNEL_ID = 123456789012345678  # Remplacez par votre ID de canal Discord
 TELEGRAM_CHANNEL_ID = -1001234567890     # Remplacez par votre ID de canal Telegram
@@ -26,7 +29,7 @@ TELEGRAM_CHANNEL_ID = -1001234567890     # Remplacez par votre ID de canal Teleg
 async def on_message(message):
     if message.channel.id == DISCORD_CHANNEL_ID and not message.author.bot:
         text = f"**{message.author.name}:** {message.content}"
-        await bot_telegram.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=text)
+        await bot_telegram.bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=text)
     await bot_discord.process_commands(message)
 
 # Synchronisation Telegram vers Discord
@@ -36,26 +39,20 @@ async def handle_telegram_message(update: Update) -> None:
         text = f"**{update.message.from_user.username}:** {update.message.text}"
         await channel.send(text)
 
+# Commande /start sur Telegram
 async def start_telegram_command(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Hello!')
 
+# Commande /id sur Telegram
 async def send_id_list(update: Update, context: CallbackContext) -> None:
-    chat_ids = [update.message.chat_id]
-    response = "The bot is present in the following chat(s):\n" + "\n".join(str(chat_id) for chat_id in chat_ids)
+    response = f'The bot is present in chat ID: {update.message.chat_id}'
     await update.message.reply_text(response)
 
 async def start_telegram_application() -> None:
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
-    
-    # Ajouter les handlers de commande
-    application.add_handler(CommandHandler('start', start_telegram_command))
-    application.add_handler(CommandHandler('id', send_id_list))
-    
-    # Ajouter le handler de message
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
-    
-    # Démarrage de l'application Telegram
-    await application.run_polling()
+    bot_telegram.add_handler(CommandHandler('start', start_telegram_command))
+    bot_telegram.add_handler(CommandHandler('id', send_id_list))
+    bot_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
+    await bot_telegram.run_polling()
 
 async def main() -> None:
     # Démarrage du bot Discord
@@ -73,7 +70,6 @@ async def main() -> None:
         # Annulation des tâches pour un arrêt propre
         discord_task.cancel()
         telegram_task.cancel()
-        # Attente de la fin des tâches de fermeture
         await asyncio.gather(discord_task, telegram_task, return_exceptions=True)
 
 if __name__ == '__main__':
