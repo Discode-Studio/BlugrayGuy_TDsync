@@ -3,7 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from telegram import Bot, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, MessageHandler, filters
 
 # Variables d'environnement pour les tokens
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -29,11 +29,11 @@ async def start_telegram_application() -> None:
 
     telegram_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, telegram_message_handler)
     application.add_handler(telegram_handler)
-    
+
     await application.run_polling()
 
 # Channels IDs
-DISCORD_CHANNEL_ID = 123456789012345678  # Remplacez par votre ID de canal Discord
+DISCORD_CHANNEL_ID = 1245837394939482323  # Remplacez par votre ID de canal Discord
 TELEGRAM_CHANNEL_ID = -1001234567890     # Remplacez par votre ID de canal Telegram
 
 # Synchronisation Discord vers Telegram
@@ -45,21 +45,13 @@ async def on_message(message):
         await bot_telegram.send_message(chat_id=chat_id, text=text)
     await bot_discord.process_commands(message)
 
-# Fonction principale
 async def main():
-    # Démarrage du bot Telegram
+    # Démarrage de l'application Telegram dans une tâche
     telegram_task = asyncio.create_task(start_telegram_application())
     
     # Démarrage du bot Discord
     await bot_discord.start(DISCORD_TOKEN)
 
 if __name__ == '__main__':
-    # Obtenir la boucle d'événements existante ou en créer une nouvelle
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        # Si une boucle est déjà en cours, créer une tâche
-        loop.create_task(main())
-        loop.run_forever()
-    else:
-        # Si aucune boucle n'est en cours, exécuter le main normalement
-        asyncio.run(main())
+    # Exécution de la boucle d'événements
+    asyncio.run(main())
