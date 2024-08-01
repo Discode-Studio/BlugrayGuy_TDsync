@@ -15,30 +15,35 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Clean up old installations
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+
+    - name: Create virtual environment
       run: |
-        python -m pip uninstall -y discord.py python-telegram-bot
-        python -m pip cache purge
+        python -m venv venv
+        source venv/bin/activate
 
     - name: Install dependencies
       run: |
+        source venv/bin/activate
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Check installed packages
       run: |
+        source venv/bin/activate
         python -m pip list
-
-    - name: Verify Python paths
-      run: |
-        python -m site
 
     - name: Run main.py
       run: |
+        source venv/bin/activate
         python main.py | tee bot_logs.txt
 
     - name: Run id.py
       run: |
+        source venv/bin/activate
         python id.py | tee bot_logs.txt
 
     - name: Notify Discord - Send bot logs
