@@ -2,12 +2,15 @@ import os
 import asyncio
 import discord
 from discord.ext import commands
-from telegram import Update
+from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Variables d'environnement pour les tokens
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+
+if not DISCORD_TOKEN or not TELEGRAM_TOKEN:
+    raise ValueError("DISCORD_TOKEN and TELEGRAM_TOKEN must be set.")
 
 # Configuration du bot Discord
 intents = discord.Intents.default()
@@ -51,4 +54,12 @@ async def main():
     await bot_discord.start(DISCORD_TOKEN)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    # Obtenir la boucle d'événements existante ou en créer une nouvelle
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        # Si une boucle est déjà en cours, on l'utilise
+        loop.create_task(main())
+        loop.run_forever()
+    else:
+        # Si aucune boucle n'est en cours, on exécute le main normalement
+        asyncio.run(main())
