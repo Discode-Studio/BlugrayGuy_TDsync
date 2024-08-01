@@ -21,7 +21,7 @@ bot_discord = commands.Bot(command_prefix='!', intents=intents)
 bot_telegram = Bot(token=TELEGRAM_TOKEN)
 
 # Channels IDs
-DISCORD_CHANNEL_ID = 1245837394939482323  # Remplacez par votre ID de canal Discord
+DISCORD_CHANNEL_ID = 123456789012345678  # Remplacez par votre ID de canal Discord
 TELEGRAM_CHANNEL_ID = -1001234567890     # Remplacez par votre ID de canal Telegram
 
 # Synchronisation Discord vers Telegram
@@ -39,12 +39,12 @@ async def handle_telegram_message(update: Update) -> None:
         text = f"**{update.message.from_user.username}:** {update.message.text}"
         await channel.send(text)
 
-async def start_telegram_application():
+async def start_telegram_application() -> None:
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
     await application.run_polling()
 
-async def main():
+async def main() -> None:
     # Démarrage du bot Discord
     discord_task = asyncio.create_task(bot_discord.start(DISCORD_TOKEN))
     
@@ -55,4 +55,9 @@ async def main():
     await asyncio.gather(discord_task, telegram_task)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Program interrupted")
+    except Exception as e:
+        print(f"An error occurred: {e}")
