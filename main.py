@@ -54,17 +54,8 @@ async def start_telegram_application() -> None:
     # Ajouter le handler de message
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
     
-    try:
-        await application.initialize()
-        print("Telegram application initialized")
-        await application.run_polling()
-    except Exception as e:
-        print(f"An error occurred with Telegram bot: {e}")
-    finally:
-        try:
-            await application.shutdown()
-        except Exception as e:
-            print(f"An error occurred during Telegram bot shutdown: {e}")
+    # Démarrage de l'application Telegram
+    await application.run_polling()
 
 async def main() -> None:
     # Démarrage du bot Discord
@@ -78,8 +69,6 @@ async def main() -> None:
         await asyncio.gather(discord_task, telegram_task)
     except KeyboardInterrupt:
         print("Program interrupted")
-    except Exception as e:
-        print(f"An error occurred: {e}")
     finally:
         # Assurez-vous de fermer les tâches correctement
         discord_task.cancel()
