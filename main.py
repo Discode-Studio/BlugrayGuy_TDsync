@@ -2,8 +2,8 @@ import os
 import asyncio
 import discord
 from discord.ext import commands
-from telegram import Bot, Update
-from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters
 
 # Variables d'environnement pour les tokens
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -18,7 +18,8 @@ intents.messages = True
 bot_discord = commands.Bot(command_prefix='!', intents=intents)
 
 # Configuration du bot Telegram
-bot_telegram = Bot(token=TELEGRAM_TOKEN)
+# Enlevez ce bloc si vous utilisez `Application.builder().token(token).build()`
+# bot_telegram = Bot(token=TELEGRAM_TOKEN)
 
 # Channels IDs
 DISCORD_CHANNEL_ID = 123456789012345678  # Remplacez par votre ID de canal Discord
@@ -39,13 +40,28 @@ async def handle_telegram_message(update: Update) -> None:
         text = f"**{update.message.from_user.username}:** {update.message.text}"
         await channel.send(text)
 
+async def start_telegram_command(update: Update, context: CallbackContext) -> None:
+    print(f"Received '/start' command from {update.message.from_user.username}")
+    await update.message.reply_text('Hello!')
+
+async def send_id_list(update: Update, context: CallbackContext) -> None:
+    chat_ids = [update.message.chat_id]
+    response = "The bot is present in the following chat(s):\n" + "\n".join(str(chat_id) for chat_id in chat_ids)
+    await update.message.reply_text(response)
+
 async def start_telegram_application() -> None:
     application = Application.builder().token(TELEGRAM_TOKEN).build()
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
+    
+    # Ajouter les handlers de commande
     application.add_handler(CommandHandler('start', start_telegram_command))
+    application.add_handler(CommandHandler('id', send_id_list))
+    
+    # Ajouter le handler de message
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
     
     try:
         await application.initialize()
+        print("Telegram application initialized")
         await application.run_polling()
     except Exception as e:
         print(f"An error occurred with Telegram bot: {e}")
@@ -54,9 +70,6 @@ async def start_telegram_application() -> None:
             await application.shutdown()
         except Exception as e:
             print(f"An error occurred during Telegram bot shutdown: {e}")
-
-async def start_telegram_command(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hello!')
 
 async def main() -> None:
     # Démarrage du bot Discord
