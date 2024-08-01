@@ -77,8 +77,4 @@ async def main() -> None:
         await asyncio.gather(discord_task, telegram_task, return_exceptions=True)
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(main())
-    finally:
-        loop.close()
+    asyncio.get_event_loop().run_until_complete(main())
