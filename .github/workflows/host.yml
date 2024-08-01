@@ -34,7 +34,7 @@ jobs:
       run: |
         source venv/bin/activate
         pip install -r requirements.txt
-        pip install discord.py python-telegram-bot
+        pip install discord.py python-telegram-bot --upgrade
 
     - name: Check installed packages
       run: |
