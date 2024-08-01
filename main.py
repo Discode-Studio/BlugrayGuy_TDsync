@@ -89,6 +89,7 @@ async def main() -> None:
         # Assurez-vous de fermer les tâches correctement
         discord_task.cancel()
         telegram_task.cancel()
+        # Assurez-vous d'attendre la fin des tâches de fermeture
         await asyncio.gather(discord_task, telegram_task, return_exceptions=True)
 
 if __name__ == '__main__':
