@@ -1,9 +1,9 @@
 import os
-import discord
 import asyncio
+import discord
 from discord.ext import commands
 from telegram import Bot, Update
-from telegram.ext import Application, MessageHandler, filters
+from telegram.ext import Application, MessageHandler, filters, CommandHandler, CallbackContext
 
 # Variables d'environnement pour les tokens
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -42,7 +42,19 @@ async def handle_telegram_message(update: Update) -> None:
 async def start_telegram_application() -> None:
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
-    await application.run_polling()
+    application.add_handler(CommandHandler('start', start_telegram_command))
+    try:
+        await application.run_polling()
+    except Exception as e:
+        print(f"An error occurred with Telegram bot: {e}")
+    finally:
+        try:
+            await application.shutdown()
+        except Exception as e:
+            print(f"An error occurred during Telegram bot shutdown: {e}")
+
+async def start_telegram_command(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text('Hello!')
 
 async def main() -> None:
     # Démarrage du bot Discord
