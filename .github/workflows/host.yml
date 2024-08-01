@@ -31,8 +31,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install discord.py python-telegram-bot
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip list | grep discord
+          pip list | grep telegram
+        
 
     - name: Notify Discord - Install dependencies completed
       if: success()
