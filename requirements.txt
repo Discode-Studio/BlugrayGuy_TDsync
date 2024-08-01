@@ -1,2 +1,2 @@
 discord.py
-python-telegram-bot
+python-telegram-bot --upgrade
