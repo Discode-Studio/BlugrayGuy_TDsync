@@ -1,5 +1,7 @@
 import os
 import threading
+import asyncio
+import discord
 from discord.ext import commands
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext, filters
@@ -57,7 +59,6 @@ def run_discord_bot():
     bot_discord.run(DISCORD_TOKEN)
 
 def run_telegram_bot():
-    import asyncio
     asyncio.run(start_telegram_application())
 
 if __name__ == '__main__':
