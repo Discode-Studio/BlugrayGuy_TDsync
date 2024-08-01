@@ -17,10 +17,6 @@ intents = discord.Intents.default()
 intents.messages = True
 bot_discord = commands.Bot(command_prefix='!', intents=intents)
 
-# Configuration du bot Telegram
-# Enlevez ce bloc si vous utilisez `Application.builder().token(token).build()`
-# bot_telegram = Bot(token=TELEGRAM_TOKEN)
-
 # Channels IDs
 DISCORD_CHANNEL_ID = 123456789012345678  # Remplacez par votre ID de canal Discord
 TELEGRAM_CHANNEL_ID = -1001234567890     # Remplacez par votre ID de canal Telegram
@@ -41,7 +37,6 @@ async def handle_telegram_message(update: Update) -> None:
         await channel.send(text)
 
 async def start_telegram_command(update: Update, context: CallbackContext) -> None:
-    print(f"Received '/start' command from {update.message.from_user.username}")
     await update.message.reply_text('Hello!')
 
 async def send_id_list(update: Update, context: CallbackContext) -> None:
