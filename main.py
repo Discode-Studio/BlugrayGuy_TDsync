@@ -1,5 +1,4 @@
 import os
-import threading
 import asyncio
 import discord
 from discord.ext import commands
@@ -19,11 +18,24 @@ intents.messages = True
 bot_discord = commands.Bot(command_prefix='!', intents=intents)
 
 # Configuration du bot Telegram
-bot_telegram = Application.builder().token(TELEGRAM_TOKEN).build()
+async def start_telegram_application(application: Application) -> None:
+    async def handle_telegram_message(update: Update) -> None:
+        if update.message.chat_id == TELEGRAM_CHANNEL_ID:
+            channel = bot_discord.get_channel(DISCORD_CHANNEL_ID)
+            text = f"**{update.message.from_user.username}:** {update.message.text}"
+            await channel.send(text)
 
-# Channels IDs
-DISCORD_CHANNEL_ID = 123456789012345678  # Remplacez par votre ID de canal Discord
-TELEGRAM_CHANNEL_ID = -1001234567890     # Remplacez par votre ID de canal Telegram
+    async def start_telegram_command(update: Update, context: CallbackContext) -> None:
+        await update.message.reply_text('Hello!')
+
+    async def send_id_list(update: Update, context: CallbackContext) -> None:
+        response = f'The bot is present in chat ID: {update.message.chat_id}'
+        await update.message.reply_text(response)
+
+    application.add_handler(CommandHandler('start', start_telegram_command))
+    application.add_handler(CommandHandler('id', send_id_list))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
+    await application.run_polling()
 
 # Synchronisation Discord vers Telegram
 @bot_discord.event
@@ -33,41 +45,21 @@ async def on_message(message):
         await bot_telegram.bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=text)
     await bot_discord.process_commands(message)
 
-# Synchronisation Telegram vers Discord
-async def handle_telegram_message(update: Update) -> None:
-    if update.message.chat_id == TELEGRAM_CHANNEL_ID:
-        channel = bot_discord.get_channel(DISCORD_CHANNEL_ID)
-        text = f"**{update.message.from_user.username}:** {update.message.text}"
-        await channel.send(text)
+async def main() -> None:
+    # Démarrage du bot Telegram
+    telegram_application = Application.builder().token(TELEGRAM_TOKEN).build()
+    telegram_task = asyncio.create_task(start_telegram_application(telegram_application))
 
-# Commande /start sur Telegram
-async def start_telegram_command(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('Hello!')
+    # Démarrage du bot Discord
+    discord_task = asyncio.create_task(bot_discord.start(DISCORD_TOKEN))
 
-# Commande /id sur Telegram
-async def send_id_list(update: Update, context: CallbackContext) -> None:
-    response = f'The bot is present in chat ID: {update.message.chat_id}'
-    await update.message.reply_text(response)
-
-async def start_telegram_application() -> None:
-    bot_telegram.add_handler(CommandHandler('start', start_telegram_command))
-    bot_telegram.add_handler(CommandHandler('id', send_id_list))
-    bot_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_telegram_message))
-    await bot_telegram.run_polling()
-
-def run_discord_bot():
-    bot_discord.run(DISCORD_TOKEN)
-
-def run_telegram_bot():
-    asyncio.run(start_telegram_application())
+    # Attente de la fin des tâches
+    await asyncio.gather(discord_task, telegram_task)
 
 if __name__ == '__main__':
-    # Lancer les bots dans des threads séparés pour éviter les conflits de boucle d'événements
-    discord_thread = threading.Thread(target=run_discord_bot)
-    telegram_thread = threading.Thread(target=run_telegram_bot)
-    
-    discord_thread.start()
-    telegram_thread.start()
-    
-    discord_thread.join()
-    telegram_thread.join()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Program interrupted")
+    except Exception as e:
+        print(f"An error occurred: {e}")
